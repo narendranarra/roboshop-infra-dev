@@ -6,14 +6,14 @@ terraform {
     }
   }
 
-  backend "s3" {
+   backend "s3" {
     bucket       = "84s-narendrablog.shop-dev"
     key          = "roboshop-dev-vpn"
     region       = "us-east-1"
     encrypt      = true
     use_lockfile = true
   }
-}
+} 
 
 provider "aws" {
   region = "us-east-1"

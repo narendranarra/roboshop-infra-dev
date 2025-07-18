@@ -4,7 +4,7 @@ resource "aws_key_pair" "openvpn" {
   #public_key = file("C:\\users\\nnarra\\Downloads\\Devops\\daws-84s\\openvpn.pub") # for mac use /
 }
 
-resource "aws_instance" "openvpn" {
+resource "aws_instance" "vpn" {
   ami           = local.ami_id
   instance_type = "t3.micro"
   vpc_security_group_ids = [local.vpn_sg_id]
@@ -28,4 +28,4 @@ resource "aws_route53_record" "vpn" {
   ttl     = 1
   records = [aws_instance.vpn.public_ip]
   allow_overwrite = true
-}
+} 
