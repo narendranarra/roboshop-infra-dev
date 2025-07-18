@@ -101,6 +101,19 @@ module "rabbitmq" {
 
 }
 
+# sg creating for catalogue
+module "catalogue" {
+    #source = "../../terraform-aws-securitygroup"
+    source = "git::https://github.com/narendranarra/terraform-aws-securitygroup.git?ref=main"
+    project = var.project
+    environment = var.environment
+
+    sg_name = "catalogue" 
+    sg_description = "for catalogue"
+    vpc_id = local.vpc_id
+
+}
+
 # bastion accepting connections from my laptop
 resource "aws_security_group_rule" "bastion_laptop" {
   type              = "ingress"
@@ -111,7 +124,7 @@ resource "aws_security_group_rule" "bastion_laptop" {
   security_group_id = module.bastion.sg_id
 } 
 
-# backend ALB accepting connections from my bastion host on port no 80
+# backend ALB accepting connections from  bastion host on port no 80
 resource "aws_security_group_rule" "backend_alb_bastion" {
   type              = "ingress"
   from_port         = 80
@@ -165,7 +178,7 @@ resource "aws_security_group_rule" "backend_alb_vpn" {
   security_group_id = module.backend_alb.sg_id
 } 
 
-# backend ALB accepting connections from VPN host on port no 80
+# mongodb accepting connections from VPN host via ssh
 resource "aws_security_group_rule" "mongodb_vpn_ssh" {
     count = length(var.mongodb_ports_vpn)
   type              = "ingress"
@@ -208,3 +221,53 @@ resource "aws_security_group_rule" "rabbitmq_vpn_ssh" {
   source_security_group_id = module.vpn.sg_id
   security_group_id = module.rabbitmq.sg_id
 } 
+
+resource "aws_security_group_rule" "catalogue_backend_alb_vpn" {
+  type              = "ingress"
+  from_port         = 8080
+  to_port           = 8080
+  protocol          = "tcp"
+  source_security_group_id = module.backend_alb.sg_id
+  security_group_id = module.catalogue.sg_id
+} 
+
+#catalogue should accept connections from vpn over ssh
+resource "aws_security_group_rule" "catalogue_vpn_ssh" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  source_security_group_id = module.vpn.sg_id
+  security_group_id = module.catalogue.sg_id
+} 
+
+#catalogue should accept connections from vpn over 8080 
+resource "aws_security_group_rule" "catalogue_vpn_http" {
+  type              = "ingress"
+  from_port         = 8080
+  to_port           = 8080
+  protocol          = "tcp"
+  source_security_group_id = module.vpn.sg_id
+  security_group_id = module.catalogue.sg_id
+} 
+
+#catalogue should accept connections from bastion
+resource "aws_security_group_rule" "catalogue_bastion" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  source_security_group_id = module.bastion.sg_id
+  security_group_id = module.catalogue.sg_id
+} 
+
+#mongodb should accept connections from catalogue
+resource "aws_security_group_rule" "mongodb_catalogue" { 
+  type              = "ingress"
+  from_port         = 27017
+  to_port           = 27017
+  protocol          = "tcp"
+  source_security_group_id = module.catalogue.sg_id # source is coming from catalogue 
+  security_group_id = module.mongodb.sg_id          # is going to mongodb
+}  
+
