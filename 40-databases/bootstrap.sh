@@ -2,4 +2,4 @@
 
 component=$1
 dnf install ansible -y
-ansible-pull -U https://github.com/narendranarra/ansible-roboshop-roles.git -e component=$1 -e env=$2 main.yaml #roles.tf also use it copied from sivas 
+ansible-pull -U https://github.com/narendranarra/ansible-roboshop-roles-tf.git -e component=$1 -e env=$2 main.yaml #roles.tf also use it copied from sivas 
